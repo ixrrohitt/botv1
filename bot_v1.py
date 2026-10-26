@@ -3,6 +3,7 @@ import re
 import asyncio
 import logging
 import time
+from aiohttp import web
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from telethon.errors import (
@@ -153,5 +154,31 @@ async def main():
     await bot.run_until_disconnected()
 
 
+
+async def health(request):
+    return web.json_response({"status": "ok"})
+
+
+async def main():
+    app = web.Application()
+    app.router.add_get("/", health)
+    app.router.add_get("/health", health)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    port = int(os.environ.get("PORT", "10000"))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+    try:
+        await bot.start(bot_token=BOT_TOKEN)
+        print("Bot chalu hai...")
+        await bot.run_until_disconnected()
+    finally:
+        await runner.cleanup()
+
+
 if __name__ == "__main__":
     asyncio.run(main())
+
